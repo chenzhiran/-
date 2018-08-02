@@ -12,7 +12,9 @@
   margin-bottom: 60rpx;
   font-size: 30rpx;
   line-height: 42rpx;
-  color: rgba(0, 0, 0, 0.5)
+  color: rgba(0, 0, 0, 0.5)!important;
+  border: none!important;
+  padding: 0!important;
 }
 
 .location{
@@ -28,6 +30,7 @@
 }
 
 .location-tips{
+  height: 42rpx; /*固定高度, 没字时也有高度*/
   margin-top:10rpx;
   text-align: center;
 }

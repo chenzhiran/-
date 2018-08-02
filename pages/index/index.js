@@ -18,6 +18,10 @@ const weatherColorMap = {
 
 const QQMapWX = require('../../libs/qqmap-wx-jssdk.js')
 
+const UNPROMPTED = 0
+const UNAUTHORIZED = 1
+const AUTHORIZED = 2
+
 Page({
   data: {
     nowTemp: '',
@@ -25,13 +29,31 @@ Page({
     nowWeatherBackground: "",
     hourlyWeather: [],
     todayTemp: "",
-    todayDate: ""
+    todayDate: "",
+    city: '北京市',
+    locationAuthType: UNPROMPTED
   },
   onLoad() {
     this.qqmapsdk = new QQMapWX({
       key: '7QGBZ-GAXKO-4DGWW-SFSNF-O5JXT-XBFIG'
     })
-    this.getNow()
+    wx.getSetting({
+      success: res => {
+        let auth = res.authSetting['scope.userLocation']
+        this.setData({
+          locationAuthType: auth ? AUTHORIZED
+            : (auth === false) ? UNAUTHORIZED : UNPROMPTED
+        })
+
+        if (auth)
+          this.getCityAndWeather()
+        else
+          this.getNow() 
+      },
+      fail: () => {
+        this.getNow() 
+      }
+    })
   },
   onPullDownRefresh() {
     this.getNow(() => {
@@ -42,7 +64,7 @@ Page({
     wx.request({
       url: 'https://test-miniprogram.com/api/weather/now',
       data: {
-        city: '北京市'
+        city: this.data.city
       },
       success: res => {
         let result = res.data.result
@@ -93,13 +115,18 @@ Page({
   },
   onTapDayWeather() {
     wx.navigateTo({
-      url: '/pages/list/list',
+      url: '/pages/list/list?city=' + this.data.city,
     })
   },
   onTapLocation() {
+    this.getCityAndWeather()
+  },
+  getCityAndWeather() {
     wx.getLocation({
       success: res => {
-        console.log(res.latitude,res.longitude)
+        this.setData({
+          locationAuthType: AUTHORIZED,
+        })
         this.qqmapsdk.reverseGeocoder({
           location: {
             latitude: res.latitude,
@@ -107,10 +134,18 @@ Page({
           },
           success: res => {
             let city = res.result.address_component.city
-            console.log(city)
+            this.setData({
+              city: city,
+            })
+            this.getNow()
           }
         })
       },
+      fail: () => {
+        this.setData({
+          locationAuthType: UNAUTHORIZED,
+        })
+      }
     })
   }
 })
