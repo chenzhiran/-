@@ -16,6 +16,8 @@ const weatherColorMap = {
   'snow': '#aae1fc'
 }
 
+const QQMapWX = require('../../libs/qqmap-wx-jssdk.js')
+
 Page({
   data: {
     nowTemp: '',
@@ -26,6 +28,9 @@ Page({
     todayDate: ""
   },
   onLoad() {
+    this.qqmapsdk = new QQMapWX({
+      key: '7QGBZ-GAXKO-4DGWW-SFSNF-O5JXT-XBFIG'
+    })
     this.getNow()
   },
   onPullDownRefresh() {
@@ -37,7 +42,7 @@ Page({
     wx.request({
       url: 'https://test-miniprogram.com/api/weather/now',
       data: {
-        city: '广州市'
+        city: '北京市'
       },
       success: res => {
         let result = res.data.result
@@ -94,7 +99,17 @@ Page({
   onTapLocation() {
     wx.getLocation({
       success: res => {
-        console.log(res.latitude, res.longitude)
+        console.log(res.latitude,res.longitude)
+        this.qqmapsdk.reverseGeocoder({
+          location: {
+            latitude: res.latitude,
+            longitude: res.longitude
+          },
+          success: res => {
+            let city = res.result.address_component.city
+            console.log(city)
+          }
+        })
       },
     })
   }
